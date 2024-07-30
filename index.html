@@ -3,26 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Birthday Countdown</title>
+    <title>To-Do List with Theme Picker</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <h1>My Birthday Countdown</h1>
-        <div id="countdown">
-            <div class="time">
-                <span id="days"></span> days
-            </div>
-            <div class="time">
-                <span id="hours"></span> hours
-            </div>
-            <div class="time">
-                <span id="minutes"></span> minutes
-            </div>
-            <div class="time">
-                <span id="seconds"></span> seconds
-            </div>
-        </div>
+        <h1>To-Do List</h1>
+        <input type="color" id="theme-picker" value="#28a745">
+        <input type="text" id="search" placeholder="Search...">
+        <input type="text" id="new-item" placeholder="Add a new item...">
+        <button id="add-btn">Add</button>
+        <ul id="todo-list"></ul>
     </div>
     <script src="script.js"></script>
 </body>
