@@ -1,91 +1,87 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const addButton = document.getElementById('add-btn');
-    const newItemInput = document.getElementById('new-item');
-    const todoList = document.getElementById('todo-list');
-    const searchInput = document.getElementById('search');
-    const themePicker = document.getElementById('theme-picker');
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById('signup-form');
+    const toast = document.getElementById('toast');
+    const apiUrl = ' https://jsonplaceholder.typicode.com/'; 
 
-    addButton.addEventListener('click', addItem);
-    searchInput.addEventListener('input', searchItems);
-    themePicker.addEventListener('input', changeTheme);
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
 
-    function addItem() {
-        const newItemText = newItemInput.value.trim();
-        if (newItemText !== '') {
-            const listItem = createListItem(newItemText);
-            todoList.appendChild(listItem);
-            newItemInput.value = '';
+        const username = document.getElementById('username').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if (!username || !email || !password) {
+            showToast('All fields are required.');
+            return;
+        }
+
+        if (!validateEmail(email)) {
+            showToast('Please enter a valid email address.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${' https://jsonplaceholder.typicode.com/'}/signup`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, email, password })
+            });
+
+            if (response.ok) {
+                showToast('Form submitted successfully!', true);
+                fetchUsers();
+            } else {
+                const errorData = await response.json();
+                showToast(errorData.message || 'An error occurred.');
+            }
+        } catch (error) {
+            showToast('An error occurred while submitting the form.');
+        }
+    });
+
+    async function fetchUsers() {
+        try {
+            const response = await fetch(`${apiUrl}/users`);
+            if (response.ok) {
+                const users = await response.json();
+                renderUsers(users);
+            } else {
+                showToast('Failed to retrieve users.');
+            }
+        } catch (error) {
+            showToast('An error occurred while fetching users.');
         }
     }
 
-    function createListItem(text) {
-        const listItem = document.createElement('li');
-        listItem.innerHTML = `
-            <span class="item-text">${text}</span>
-            <div class="actions">
-                <button class="edit">Edit</button>
-                <button class="delete">Delete</button>
-            </div>
-        `;
+    function renderUsers(users) {
+        const userList = document.getElementById('user-list');
+        userList.innerHTML = ''; // Clear previous data
 
-        const editButton = listItem.querySelector('.edit');
-        const deleteButton = listItem.querySelector('.delete');
-        const itemText = listItem.querySelector('.item-text');
-
-        editButton.addEventListener('click', () => editItem(listItem, itemText));
-        deleteButton.addEventListener('click', () => deleteItem(listItem));
-
-        return listItem;
-    }
-
-    function editItem(listItem, itemText) {
-        const currentText = itemText.textContent;
-        const newTextInput = document.createElement('input');
-        newTextInput.type = 'text';
-        newTextInput.value = currentText;
-
-        listItem.replaceChild(newTextInput, itemText);
-        newTextInput.focus();
-
-        newTextInput.addEventListener('blur', () => {
-            itemText.textContent = newTextInput.value.trim() !== '' ? newTextInput.value.trim() : currentText;
-            listItem.replaceChild(itemText, newTextInput);
+        users.forEach(user => {
+            const userItem = document.createElement('div');
+            userItem.className = 'user-item';
+            userItem.textContent = `${user.username} - ${user.email}`;
+            userList.appendChild(userItem);
         });
     }
 
-    function deleteItem(listItem) {
-        todoList.removeChild(listItem);
+    function validateEmail(email) {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(email);
     }
 
-    function searchItems() {
-        const searchText = searchInput.value.toLowerCase();
-        const items = todoList.querySelectorAll('li');
-
-        items.forEach(item => {
-            const itemText = item.querySelector('.item-text').textContent.toLowerCase();
-            item.classList.toggle('hidden', !itemText.includes(searchText));
-        });
+    function showToast(message, success = false) {
+        toast.textContent = message;
+        toast.className = success ? 'toast success' : 'toast error';
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3000);
     }
 
-    function changeTheme() {
-        const newColor = themePicker.value;
-        document.documentElement.style.setProperty('--primary-color', newColor);
-        document.documentElement.style.setProperty('--primary-color-hover', darkenColor(newColor, 0.2));
-    }
-
-    function darkenColor(color, amount) {
-        let usePound = false;
-        if (color[0] == "#") {
-            color = color.slice(1);
-            usePound = true;
-        }
-        const num = parseInt(color, 16);
-        let r = (num >> 16) - amount * 255;
-        let g = ((num >> 8) & 0x00FF) - amount * 255;
-        let b = (num & 0x0000FF) - amount * 255;
-        r = r < 0 ? 0 : r;
-        g = g < 0 ? 0 : g;
-        b = b < 0 ? 0 : b;
-        return (usePound ? "#" : "") + (1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1);
-    }
+    
+    fetchUsers();
 });
+
